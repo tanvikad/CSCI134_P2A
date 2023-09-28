@@ -21,26 +21,30 @@
 
 
 
-struct addArguments {
+typedef struct  {
     long long *pointer;
     long long iterations;
     int tid; 
-};
+} addArguments;
 
 void add_value(long long* pointer, long long value) {
     long long sum = *pointer + value;
     *pointer = sum;
 }
 
-void add(struct addArguments* args) {
-    for(int i = 0; i < args->iterations; i++) {
-        add_value(args->pointer, 1);
+void* add(void* args) {
+
+    addArguments* args_input = (addArguments* ) args;
+
+    for(int i = 0; i < args_input->iterations; i++) {
+        add_value(args_input->pointer, 1);
     }
 
-    for(int i = 0; i < args->iterations; i++) {
-        add_value(args->pointer, -1); 
+    for(int i = 0; i < args_input->iterations; i++) {
+        add_value(args_input->pointer, -1); 
     }
     pthread_exit(NULL);
+    return NULL;
 }
 
 int main(int argc, char *argv[]) {
@@ -77,8 +81,8 @@ int main(int argc, char *argv[]) {
 
     // num_threads = 10;
     pthread_t *threads = malloc(sizeof(pthread_t) * num_threads);
-    struct addArguments a; 
-    struct addArguments *args = malloc(sizeof(a) * num_threads);
+    // struct addArguments a; 
+    addArguments *args = malloc(sizeof(addArguments) * num_threads);
     // struct addArguments args[10];
     long long pointer_value = 0;
 
@@ -93,7 +97,12 @@ int main(int argc, char *argv[]) {
         args[i].pointer = &pointer_value;
         args[i].tid = i;
         args[i].iterations = num_iterations;
-        int rc = pthread_create(&threads[i], NULL, &add, &args[i]);
+        int rc = pthread_create(&threads[i], NULL, add, (void*)(&args[i]));
+
+        if(rc != 0) {
+            fprintf(stderr, "Pthread Creation Failed due to %s \n", strerror(errno));
+            exit(1);
+        }
     }
 
 
