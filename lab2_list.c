@@ -158,6 +158,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    for (int i = 0; i < num_threads; i++) {
+        pthread_join(threads[i], NULL);
+    }
     
     SortedListElement_t* curr = list.next;
     while(1) {
