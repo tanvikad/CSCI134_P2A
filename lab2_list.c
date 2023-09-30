@@ -26,37 +26,64 @@ int opt_yield = 0;
 int got_sync = 0;
 int got_pthread_mutex = 0;
 int got_spin_lock = 0;
-int got_compare_swap = 0;
+
+pthread_mutex_t mutex_lock;
+int test_and_set_lock = 0;
 
 SortedList_t list;
 SortedListElement_t* elements; 
 
+void lock() {
+    if(got_pthread_mutex) {
+        pthread_mutex_lock(&mutex_lock);
+    } else if(got_spin_lock) {
+        while(__sync_lock_test_and_set(&test_and_set_lock, 1) == 1) 
+            ;
+    
+    } 
+}
 
+void unlock() {
+    if(got_pthread_mutex){
+        pthread_mutex_unlock(&mutex_lock);
+    } else if(got_spin_lock) {
+        test_and_set_lock = 0;
+    }
+}
 void* thread_action(void* i) {
     long tid = (long)i;
     long start = tid*num_iterations;
-    printf("The tid is %ld \n", tid);
 
     for(int i = start; i < start+num_iterations; i++){
+        lock();
         SortedList_insert(&list, &elements[i]);
+        unlock();
     }
 
+    lock();
     int length = SortedList_length(&list);
-    printf("The length is %d \n", length);
+    unlock();
+    if(length == -1) {
+        fprintf(stderr, "Thread %ld: The list is corrupted when calling length \n", tid);
+    }
 
     for(int i =start; i < start+num_iterations; i++) {
         const char* string_to_lookup = elements[i].key;
+        int return_delete = 0;
+        lock();
         SortedListElement_t* element = SortedList_lookup(&list, string_to_lookup);
         if(element == NULL) {
             printf("Thread %ld: The element for key %s is null\n", tid, string_to_lookup);
         } else{
-            int return_delete = SortedList_delete(element);
-            if(return_delete == -1) {
-                printf("Thread %ld: Deletion failed on key %s \n", tid, string_to_lookup);
-            }
+            return_delete = SortedList_delete(element);
+        }
+        unlock();
+
+        if(return_delete == 1) {
+            fprintf(stderr, "Thread %ld: Deletion failed on key %s \n", tid, string_to_lookup);
         }
     }
-
+    
     pthread_exit(NULL);
     return NULL;
 }
@@ -64,7 +91,7 @@ void* thread_action(void* i) {
 
 char* get_rand_string() {
     static char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.-#'?!";        
-    int length = 1;
+    int length = 3;
     char* random_string = malloc(sizeof(char) * (length +1));
 
     if(random_string) {
@@ -82,6 +109,20 @@ char* get_rand_string() {
     }
 
     return random_string;
+}
+
+void print_list() {
+    SortedListElement_t* curr = list.next;
+    while(1) {
+        if(curr == NULL) break;
+        if(curr->key != NULL) {
+            printf("Key is %s, previous is %s, next is %s \n", curr->key, curr->prev->key, curr->next->key);
+        }else {
+            break;
+        }
+
+        curr = curr->next;
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -116,8 +157,6 @@ int main(int argc, char *argv[]) {
                     got_pthread_mutex = 1;
                 }else if (*optarg == 's') {
                     got_spin_lock = 1;
-                }else if (*optarg == 'c') {
-                    got_compare_swap = 1;
                 }else {
                     fprintf(stderr, "Did not give a synchronization method \n ");
                     exit(1);
@@ -150,6 +189,14 @@ int main(int argc, char *argv[]) {
     elements = malloc(sizeof(SortedListElement_t) * num_threads * num_iterations);
     pthread_t *threads = malloc(sizeof(pthread_t) * num_threads);
 
+    if(got_pthread_mutex) {
+        int rc = pthread_mutex_init(&mutex_lock, NULL);
+        if(rc != 0) {
+            fprintf(stderr, "Failed to initialize the pthread mutex \n");
+            exit(1);
+        }
+    }
+
 
 
     //initalize the elements
@@ -176,19 +223,6 @@ int main(int argc, char *argv[]) {
 
     
     printf("The length at the end is %d \n", SortedList_length(&list));
-
-
-    // SortedListElement_t* curr = list.next;
-    // while(1) {
-    //     if(curr == NULL) break;
-    //     if(curr->key != NULL) {
-    //         printf("Key is %s, previous is %s, next is %s \n", curr->key, curr->prev->key, curr->next->key);
-    //     }else {
-    //         break;
-    //     }
-
-    //     curr = curr->next;
-    // }
 
     free(elements);
     free(threads);
