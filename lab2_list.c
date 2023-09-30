@@ -34,7 +34,7 @@ SortedListElement_t* elements;
 
 char* get_rand_string() {
     static char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.-#'?!";        
-    int length = 1;
+    int length = 2;
     char* random_string = malloc(sizeof(char) * (length +1));
 
     if(random_string) {
@@ -119,7 +119,6 @@ int main(int argc, char *argv[]) {
     }
     
 
-
     // SortedListElement_t elem1;
     // elem1.key = "a";
     // SortedList_insert(&list, &elem1);
@@ -136,7 +135,7 @@ int main(int argc, char *argv[]) {
     while(1) {
         if(curr == NULL) break;
         if(curr->key != NULL) {
-            printf("Key is %s \n", curr->key);
+            printf("Key is %s, previous is %s, next is %s \n", curr->key, curr->prev->key, curr->next->key);
         }else {
             break;
         }
