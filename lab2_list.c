@@ -33,14 +33,13 @@ SortedListElement_t* elements;
 
 
 void* thread_action(void* i) {
-    int tid = (int)i;
-    int start = tid*num_iterations;
-    printf("The tid is %d \n", tid);
+    long tid = (long)i;
+    long start = tid*num_iterations;
+    printf("The tid is %ld \n", tid);
 
-    // for(int i = start; i < start+num_iterations; i++){
-    //     SortedList_insert(&list, &elements[i]);
-
-    // }
+    for(int i = start; i < start+num_iterations; i++){
+        SortedList_insert(&list, &elements[i]);
+    }
 
     pthread_exit(NULL);
     return NULL;
@@ -49,7 +48,7 @@ void* thread_action(void* i) {
 
 char* get_rand_string() {
     static char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.-#'?!";        
-    int length = 2;
+    int length = 1;
     char* random_string = malloc(sizeof(char) * (length +1));
 
     if(random_string) {
@@ -148,7 +147,7 @@ int main(int argc, char *argv[]) {
     //     SortedList_insert(&list, &elements[i]);
     // }
 
-    int t; 
+    long t; 
     for (t = 0; t < num_threads; ++t) {
         // integers[t] = t;
         int rc = pthread_create(&threads[t], NULL, thread_action, (void*)t);
