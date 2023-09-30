@@ -41,6 +41,22 @@ void* thread_action(void* i) {
         SortedList_insert(&list, &elements[i]);
     }
 
+    int length = SortedList_length(&list);
+    printf("The length is %d \n", length);
+
+    for(int i =start; i < start+num_iterations; i++) {
+        const char* string_to_lookup = elements[i].key;
+        SortedListElement_t* element = SortedList_lookup(&list, string_to_lookup);
+        if(element == NULL) {
+            printf("Thread %ld: The element for key %s is null\n", tid, string_to_lookup);
+        } else{
+            int return_delete = SortedList_delete(element);
+            if(return_delete == -1) {
+                printf("Thread %ld: Deletion failed on key %s \n", tid, string_to_lookup);
+            }
+        }
+    }
+
     pthread_exit(NULL);
     return NULL;
 }
@@ -133,8 +149,8 @@ int main(int argc, char *argv[]) {
 
     elements = malloc(sizeof(SortedListElement_t) * num_threads * num_iterations);
     pthread_t *threads = malloc(sizeof(pthread_t) * num_threads);
-    // int* integers = malloc(sizeof(int) * num_threads);
-    
+
+
 
     //initalize the elements
     for (int i = 0; i < (num_threads*num_iterations); i++) {
@@ -143,9 +159,6 @@ int main(int argc, char *argv[]) {
         elements[i].next = NULL;
     }
 
-    // for(int i = 0; i < (num_threads* num_iterations); i++) {
-    //     SortedList_insert(&list, &elements[i]);
-    // }
 
     long t; 
     for (t = 0; t < num_threads; ++t) {
@@ -160,20 +173,23 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < num_threads; i++) {
         pthread_join(threads[i], NULL);
     }
-    
-    SortedListElement_t* curr = list.next;
-    while(1) {
-        if(curr == NULL) break;
-        if(curr->key != NULL) {
-            printf("Key is %s, previous is %s, next is %s \n", curr->key, curr->prev->key, curr->next->key);
-        }else {
-            break;
-        }
 
-        curr = curr->next;
-    }
+    
+    printf("The length at the end is %d \n", SortedList_length(&list));
+
+
+    // SortedListElement_t* curr = list.next;
+    // while(1) {
+    //     if(curr == NULL) break;
+    //     if(curr->key != NULL) {
+    //         printf("Key is %s, previous is %s, next is %s \n", curr->key, curr->prev->key, curr->next->key);
+    //     }else {
+    //         break;
+    //     }
+
+    //     curr = curr->next;
+    // }
 
     free(elements);
     free(threads);
-    // free(integers);
 }

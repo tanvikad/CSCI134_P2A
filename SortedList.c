@@ -79,10 +79,12 @@ int SortedList_delete( SortedListElement_t *element) {
 
 SortedListElement_t *SortedList_lookup(SortedList_t *list, const char *key) {
     if(list == NULL) return NULL;
+    if(key == NULL) return NULL;
     SortedListElement_t* current_element = list->next;
     while(1) {
+        if(current_element == NULL) return NULL;
         if(current_element->key == NULL) return NULL;
-        if(current_element->key == key) return current_element;
+        if(*current_element->key == *key) return current_element;
 
         if(opt_yield & LOOKUP_YIELD) sched_yield();
 
@@ -97,6 +99,7 @@ int SortedList_length(SortedList_t *list) {
     if(list == NULL) return -1;
     int length = 0; 
     SortedListElement_t* current_element = list->next;
+    if(current_element == NULL) return 0;
     while(1) {
         if(current_element->key == NULL) return length;
         if(current_element->next ==NULL || current_element->prev == NULL) return -1;
