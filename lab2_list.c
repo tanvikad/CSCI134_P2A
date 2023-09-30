@@ -32,6 +32,20 @@ SortedList_t list;
 SortedListElement_t* elements; 
 
 
+void* thread_action(void* i) {
+    int tid = (int)i;
+    int start = tid*num_iterations;
+    printf("The tid is %d \n", tid);
+
+    // for(int i = start; i < start+num_iterations; i++){
+    //     SortedList_insert(&list, &elements[i]);
+
+    // }
+
+    pthread_exit(NULL);
+    return NULL;
+}
+
 
 char* get_rand_string() {
     static char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.-#'?!";        
@@ -120,6 +134,8 @@ int main(int argc, char *argv[]) {
 
     elements = malloc(sizeof(SortedListElement_t) * num_threads * num_iterations);
     pthread_t *threads = malloc(sizeof(pthread_t) * num_threads);
+    // int* integers = malloc(sizeof(int) * num_threads);
+    
 
     //initalize the elements
     for (int i = 0; i < (num_threads*num_iterations); i++) {
@@ -128,10 +144,19 @@ int main(int argc, char *argv[]) {
         elements[i].next = NULL;
     }
 
-    for(int i = 0; i < (num_threads* num_iterations); i++) {
-        SortedList_insert(&list, &elements[i]);
-    }
+    // for(int i = 0; i < (num_threads* num_iterations); i++) {
+    //     SortedList_insert(&list, &elements[i]);
+    // }
 
+    int t; 
+    for (t = 0; t < num_threads; ++t) {
+        // integers[t] = t;
+        int rc = pthread_create(&threads[t], NULL, thread_action, (void*)t);
+        if(rc != 0) {
+            fprintf(stderr, "Failed to initialize the pthread \n");
+            exit(1);
+        }
+    }
 
     
     SortedListElement_t* curr = list.next;
@@ -148,4 +173,5 @@ int main(int argc, char *argv[]) {
 
     free(elements);
     free(threads);
+    // free(integers);
 }

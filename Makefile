@@ -9,6 +9,7 @@ debug: lab2_add.c
 clean:
 	rm -f *.o
 	rm -f lab2_add
+	rm -f lab2_list
 	rm -f *.gz
 	rm -f *.txt
 
