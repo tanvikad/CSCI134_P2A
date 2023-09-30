@@ -65,6 +65,7 @@ void* thread_action(void* i) {
     unlock();
     if(length == -1) {
         fprintf(stderr, "Thread %ld: The list is corrupted when calling length \n", tid);
+        exit(2);
     }
 
     for(int i =start; i < start+num_iterations; i++) {
@@ -73,17 +74,20 @@ void* thread_action(void* i) {
         lock();
         SortedListElement_t* element = SortedList_lookup(&list, string_to_lookup);
         if(element == NULL) {
-            printf("Thread %ld: The element for key %s is null\n", tid, string_to_lookup);
+            printf("Thread %ld: The element for key %s is null due to corruption\n", tid, string_to_lookup);
+            unlock();
+            exit(2);
         } else{
             return_delete = SortedList_delete(element);
         }
         unlock();
 
         if(return_delete == 1) {
-            fprintf(stderr, "Thread %ld: Deletion failed on key %s \n", tid, string_to_lookup);
+            fprintf(stderr, "Thread %ld: Deletion failed on key due to corruption %s \n", tid, string_to_lookup);
+            exit(2);
         }
     }
-    
+
     pthread_exit(NULL);
     return NULL;
 }
@@ -169,6 +173,11 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    if(got_spin_lock && got_pthread_mutex) {
+        fprintf(stderr, "Cannot use both a spin lock and a mutext lock \n");
+        exit(1);
+    }
+
     if(yield_argument) {
         for(int i = 0; i < (int)(strlen(yield_argument)); i++){
             if(yield_argument[i] == 'i')  opt_yield |= INSERT_YIELD;
@@ -197,8 +206,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-
-
     //initalize the elements
     for (int i = 0; i < (num_threads*num_iterations); i++) {
         elements[i].key = get_rand_string();
@@ -206,7 +213,11 @@ int main(int argc, char *argv[]) {
         elements[i].next = NULL;
     }
 
-
+    struct timespec start, stop;
+    if( clock_gettime( CLOCK_MONOTONIC, &start) == -1 ) {
+        fprintf(stderr, "Clock Get Time Fails %s\n", strerror(errno));
+        exit(1);
+    }
     long t; 
     for (t = 0; t < num_threads; ++t) {
         // integers[t] = t;
@@ -221,8 +232,43 @@ int main(int argc, char *argv[]) {
         pthread_join(threads[i], NULL);
     }
 
-    
-    printf("The length at the end is %d \n", SortedList_length(&list));
+    if( clock_gettime( CLOCK_MONOTONIC, &stop) == -1 ) {
+        fprintf(stderr, "Clock Get Time Fails %s\n", strerror(errno));
+        exit(1);
+    }
+
+    int length_at_the_end = SortedList_length(&list);
+    double accum = (stop.tv_sec - start.tv_sec) * 1000000000
+          + (stop.tv_nsec - start.tv_nsec);
+
+    int num_operations = 3 * num_threads * num_iterations;
+    int num_lists = 1;
+
+    char type_of_str[100] = "list-";
+    if(opt_yield&INSERT_YIELD) strcat(type_of_str, "i");
+    if(opt_yield&DELETE_YIELD) strcat(type_of_str, "d");
+    if(opt_yield&LOOKUP_YIELD) strcat(type_of_str, "l");
+
+    if(opt_yield == 0) strcat(type_of_str, "none");
+    strcat(type_of_str, "-");
+
+    if(got_pthread_mutex) strcat(type_of_str, "m");
+    else if(got_spin_lock) strcat(type_of_str, "s");
+    else strcat(type_of_str, "none");
+
+
+    int list_csv_fd = open("lab2_list.csv", O_CREAT | O_WRONLY | O_APPEND, S_IRWXU);
+    if(list_csv_fd == -1) {
+        fprintf(stderr, "Opening the csv file failed %s \n", strerror(errno));
+        exit(1);
+    }
+
+    char list_csv_buff[200];
+    printf("The length at the end is %d \n", length_at_the_end);
+    snprintf(list_csv_buff, 200, "%s,%d,%d,%d,%d,%f,%f \n", type_of_str, num_threads, num_iterations, num_lists,num_operations,
+        accum/num_operations, accum);
+    write(list_csv_fd, list_csv_buff, strlen(list_csv_buff));
+
 
     free(elements);
     free(threads);
