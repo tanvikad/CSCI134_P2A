@@ -30,14 +30,21 @@ int got_compare_swap = 0;
 long long counter = 0;
 
 pthread_mutex_t mutex_lock;
-
+int test_and_set_lock = 0;
+int compare_swap_lock = 0;
 
 
 void add_value(long long* pointer, long long value) {
     if(got_pthread_mutex) {
         pthread_mutex_lock(&mutex_lock);
-
+    } else if(got_spin_lock) {
+        while(__sync_lock_test_and_set(&test_and_set_lock, 1) == 1) 
+            ;
+    } else if(got_compare_swap) {
+        while(__sync_val_compare_and_swap(&compare_swap_lock, 0, 1) == 1) 
+            ;
     }
+
     long long sum = *pointer + value;
     if (got_yield) {
         sched_yield();
@@ -46,6 +53,10 @@ void add_value(long long* pointer, long long value) {
 
     if(got_pthread_mutex){
         pthread_mutex_unlock(&mutex_lock);
+    } else if(got_spin_lock) {
+        test_and_set_lock = 0;
+    } else if(got_compare_swap) {
+        compare_swap_lock = 0;
     }
 }
 
@@ -149,9 +160,28 @@ int main(int argc, char *argv[]) {
           + (stop.tv_nsec - start.tv_nsec);
 
     int num_operations = 2 * num_threads * num_iterations;
-    char* type_of_str = "add-none";
+    char* type_of_str;
+    
     if(got_yield) {
-        type_of_str = "add-yield-none";
+        if(got_compare_swap) {
+            type_of_str = "add_yield-c";
+        } else if(got_pthread_mutex) {
+            type_of_str = "add_yield-m";
+        } else if (got_spin_lock) {
+            type_of_str = "add_yield-s";
+        } else {
+            type_of_str = "add-yield-none";
+        }
+    }else {
+        if(got_compare_swap) {
+            type_of_str = "add-c";
+        } else if(got_pthread_mutex) {
+            type_of_str = "add-m";
+        } else if (got_spin_lock) {
+            type_of_str = "add-s";
+        } else {
+            type_of_str = "add-none";
+        }
     }
 
     int add_csv_fd = open("lab2_add.csv", O_CREAT | O_WRONLY | O_APPEND, S_IRWXU);
