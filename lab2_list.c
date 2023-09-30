@@ -32,6 +32,7 @@ SortedList_t list;
 SortedListElement_t* elements; 
 
 
+
 char* get_rand_string() {
     static char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.-#'?!";        
     int length = 2;
@@ -62,12 +63,12 @@ int main(int argc, char *argv[]) {
     const struct option options[] = {
         { "threads",  required_argument, NULL,  't' },
         { "iterations", required_argument, NULL,  'i' },
-        { "yield", no_argument, NULL, 'y'},
+        { "yield", required_argument, NULL, 'y'},
         { "sync", required_argument, NULL, 's'},
         { 0, 0, 0, 0}
     };
 
-
+    char* yield_argument = NULL; 
     while((curr_option = getopt_long(argc, argv, "i:t:y", options, NULL)) != -1)  {
         switch(curr_option) {
             case 't':
@@ -79,7 +80,7 @@ int main(int argc, char *argv[]) {
                 // num_iterations = optarg;
                 break;
             case 'y':
-                opt_yield = 1; 
+                yield_argument = optarg;  
                 break;
             case 's':
                 if(*optarg == 'm') {
@@ -100,13 +101,26 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    if(yield_argument) {
+        for(int i = 0; i < (int)(strlen(yield_argument)); i++){
+            if(yield_argument[i] == 'i')  opt_yield |= INSERT_YIELD;
+            else if(yield_argument[i] == 'd') opt_yield |= DELETE_YIELD;
+            else if (yield_argument[i] == 'l')  opt_yield |= LOOKUP_YIELD;
+            else {
+                fprintf(stderr, "Gave an invalid yield argument \n");
+                exit(1);
+            }
+        }
+    }
+
     //iinitalized list;
     list.prev = NULL;
     list.next = NULL;
     list.key = NULL;
 
     elements = malloc(sizeof(SortedListElement_t) * num_threads * num_iterations);
-    
+    pthread_t *threads = malloc(sizeof(pthread_t) * num_threads);
+
     //initalize the elements
     for (int i = 0; i < (num_threads*num_iterations); i++) {
         elements[i].key = get_rand_string();
@@ -117,20 +131,9 @@ int main(int argc, char *argv[]) {
     for(int i = 0; i < (num_threads* num_iterations); i++) {
         SortedList_insert(&list, &elements[i]);
     }
+
+
     
-
-    // SortedListElement_t elem1;
-    // elem1.key = "a";
-    // SortedList_insert(&list, &elem1);
-
-    // SortedListElement_t elem2;
-    // elem2.key = "c";
-    // SortedList_insert(&list, &elem2);
-
-    // SortedListElement_t elem3;
-    // elem3.key = "b";
-    // SortedList_insert(&list, &elem3);
-
     SortedListElement_t* curr = list.next;
     while(1) {
         if(curr == NULL) break;
@@ -144,4 +147,5 @@ int main(int argc, char *argv[]) {
     }
 
     free(elements);
+    free(threads);
 }
