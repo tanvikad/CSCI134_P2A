@@ -2,3 +2,9 @@ QUESTION 2.1.1 - causing conflicts:
 Why does it take many iterations before errors are seen?
 Why does a significantly smaller number of iterations so seldom fail?
 
+
+
+
+Citations:
+
+Referenced https://codereview.stackexchange.com/questions/29198/random-string-generator-in-c to create a random sring

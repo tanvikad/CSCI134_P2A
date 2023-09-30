@@ -1,5 +1,7 @@
-output: lab2_add.c
+output: lab2_add.c lab2_list.c 
 	gcc -Wall -Wextra -pthread lab2_add.c -o lab2_add
+	gcc -Wall -Wextra -pthread lab2_list.c SortedList.c -o lab2_list
+
 
 debug: lab2_add.c
 	gcc -Wall -Wextra -pthread -g lab2_add.c -o lab2_add

@@ -2,8 +2,6 @@
 #include <stdio.h> //for printing
 #include <stdlib.h> 
 #include <time.h>
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -22,7 +20,7 @@
 
 int num_threads = 1;
 int num_iterations = 1;
-int got_yield = 0;
+int opt_yield = 0;
 int got_sync = 0;
 int got_pthread_mutex = 0;
 int got_spin_lock = 0;
@@ -46,7 +44,7 @@ void add_value(long long* pointer, long long value) {
     }
 
     long long sum = *pointer + value;
-    if (got_yield) {
+    if (opt_yield) {
         sched_yield();
     }
     *pointer = sum;
@@ -95,7 +93,7 @@ int main(int argc, char *argv[]) {
                 // num_iterations = optarg;
                 break;
             case 'y':
-                got_yield = 1; 
+                opt_yield = 1; 
                 break;
             case 's':
                 if(*optarg == 'm') {
@@ -162,7 +160,7 @@ int main(int argc, char *argv[]) {
     int num_operations = 2 * num_threads * num_iterations;
     char* type_of_str;
     
-    if(got_yield) {
+    if(opt_yield) {
         if(got_compare_swap) {
             type_of_str = "add_yield-c";
         } else if(got_pthread_mutex) {
