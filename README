@@ -1,6 +1,20 @@
+NAME: Tanvika Dasari
+EMAIL: tdasari@hmc.edu
+ID: 40205638
+
+
 QUESTION 2.1.1 - causing conflicts:
 Why does it take many iterations before errors are seen?
 Why does a significantly smaller number of iterations so seldom fail?
+
+I got conflicts when I used 2 threads and 1000 iterations. It takes a more iterations to cause errors because it increases the chance that 2 threads are accessing the variable at the same time. With smaller iterations, there are fewer chances for the threads to overlap because after accessing the counter they exit. 
+
+QUESTION 2.1.2 - cost of yielding:
+Why are the --yield runs so much slower?
+Where is the additional time going?
+Is it possible to get valid per-operation timings if we are using the --yield option?
+If so, explain how. If not, explain why not.
+
 
 
 

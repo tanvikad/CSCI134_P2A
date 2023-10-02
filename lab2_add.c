@@ -114,9 +114,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    printf("The number of threads is %d \n", num_threads);
-    printf("The number of interations is %d \n", num_iterations);
-
     pthread_t *threads = malloc(sizeof(pthread_t) * num_threads);
 
     if(got_pthread_mutex) {
@@ -162,11 +159,11 @@ int main(int argc, char *argv[]) {
     
     if(opt_yield) {
         if(got_compare_swap) {
-            type_of_str = "add_yield-c";
+            type_of_str = "add-yield-c";
         } else if(got_pthread_mutex) {
-            type_of_str = "add_yield-m";
+            type_of_str = "add-yield-m";
         } else if (got_spin_lock) {
-            type_of_str = "add_yield-s";
+            type_of_str = "add-yield-s";
         } else {
             type_of_str = "add-yield-none";
         }
@@ -189,8 +186,7 @@ int main(int argc, char *argv[]) {
     }
 
     char add_csv_buff[200];
-    printf("the pointer value is %lld", counter);
-    snprintf(add_csv_buff, 200, "%s, %d, %d, %f, %lld\n", type_of_str, num_iterations, num_operations, accum/num_operations, counter);
+    snprintf(add_csv_buff, 200, "%s,%d,%d,%d,%f,%f,%lld\n", type_of_str, num_threads, num_iterations, num_operations, accum, accum/num_operations, counter);
     write(add_csv_fd, add_csv_buff, strlen(add_csv_buff));
 
     free(threads);
