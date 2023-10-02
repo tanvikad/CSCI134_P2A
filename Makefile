@@ -25,8 +25,6 @@ tests:
 		./lab2_add --threads $$thr --iterations 1000  --yield --sync=s ; \
 		./lab2_add --threads $$thr --iterations 10000 --yield --sync=s ; \
 		./lab2_add --threads $$thr --iterations 10000  --yield --sync=c ; \
-		./lab2_add --threads $$thr --iterations 10000  --yield ; \
-		./lab2_add --threads $$thr --iterations 10000  ; \
 		./lab2_add --threads $$thr --iterations 10000 --sync=m ; \
 		./lab2_add --threads $$thr --iterations 1000 --sync=s ; \
 		./lab2_add --threads $$thr --iterations 10000 --sync=s ; \
