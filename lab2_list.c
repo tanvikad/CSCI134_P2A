@@ -50,6 +50,13 @@ void unlock() {
         test_and_set_lock = 0;
     }
 }
+
+void handle_sigint(int sig)
+{
+    fprintf(stderr, "Caught a segmentation fault with code %d", sig);
+    exit(2);
+}
+
 void* thread_action(void* i) {
     long tid = (long)i;
     long start = tid*num_iterations;
@@ -132,6 +139,7 @@ void print_list() {
 int main(int argc, char *argv[]) {
     srand(time(0));
 
+    signal(SIGSEGV, handle_sigint);
 
     int curr_option;
     const struct option options[] = {
@@ -264,9 +272,12 @@ int main(int argc, char *argv[]) {
     }
 
     char list_csv_buff[200];
-    printf("The length at the end is %d \n", length_at_the_end);
+    if(length_at_the_end != 0) {
+        fprintf(stderr, "The length at the end is not 0 \n");
+        exit(2);
+    }
     snprintf(list_csv_buff, 200, "%s,%d,%d,%d,%d,%f,%f \n", type_of_str, num_threads, num_iterations, num_lists,num_operations,
-        accum/num_operations, accum);
+        accum, accum/num_operations);
     write(list_csv_fd, list_csv_buff, strlen(list_csv_buff));
 
 
