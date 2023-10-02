@@ -47,7 +47,8 @@ void unlock() {
     if(got_pthread_mutex){
         pthread_mutex_unlock(&mutex_lock);
     } else if(got_spin_lock) {
-        test_and_set_lock = 0;
+        // test_and_set_lock = 0;
+        __sync_lock_release(&test_and_set_lock);
     }
 }
 
@@ -276,9 +277,11 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "The length at the end is not 0 \n");
         exit(2);
     }
-    snprintf(list_csv_buff, 200, "%s,%d,%d,%d,%d,%f,%f \n", type_of_str, num_threads, num_iterations, num_lists,num_operations,
-        accum, accum/num_operations);
+    snprintf(list_csv_buff, 200, "%s,%d,%d,%d,%d,%ld,%ld \n", type_of_str, num_threads, num_iterations, num_lists,num_operations,
+        (long)(accum), (long)(accum/num_operations));
     write(list_csv_fd, list_csv_buff, strlen(list_csv_buff));
+    write(1, list_csv_buff, strlen(list_csv_buff));
+
 
 
     free(elements);

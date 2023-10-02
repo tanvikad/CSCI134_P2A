@@ -13,27 +13,29 @@ graphs:
 	gnuplot lab2_list.gp
 
 tests:
-	# for its in 10 20 40 80 100 1000 10000 100000 ; do \
-	# 	for thr in 1 2 4 8 12 ;	 do \
-	# 		./lab2_add --threads $$thr --iterations $$its ; \
-	# 		./lab2_add --threads $$thr --iterations $$its --yield ; \
-	# 	done \
-	# done
+	> lab2_list.csv
+	> lab2_add.csv
+	for its in 10 20 40 80 100 1000 10000 100000 ; do \
+		for thr in 1 2 4 8 12 ;	 do \
+			./lab2_add --threads $$thr --iterations $$its ; \
+			./lab2_add --threads $$thr --iterations $$its --yield ; \
+		done \
+	done
 
-	# for its in 100000 1000000 10000000 100000000 ; do \
-	# 	./lab2_add --threads 1 --iterations $$its ; \
-	# done
+	for its in 100000 1000000 10000000 100000000 ; do \
+		./lab2_add --threads 1 --iterations $$its ; \
+	done
 
-	# for thr in 1 2 4 8 12 ; do \
-	# 	./lab2_add --threads $$thr --iterations 10000  --yield --sync=m ; \
-	# 	./lab2_add --threads $$thr --iterations 1000  --yield --sync=s ; \
-	# 	./lab2_add --threads $$thr --iterations 10000 --yield --sync=s ; \
-	# 	./lab2_add --threads $$thr --iterations 10000  --yield --sync=c ; \
-	# 	./lab2_add --threads $$thr --iterations 10000 --sync=m ; \
-	# 	./lab2_add --threads $$thr --iterations 1000 --sync=s ; \
-	# 	./lab2_add --threads $$thr --iterations 10000 --sync=s ; \
-	# 	./lab2_add --threads $$thr --iterations 10000 --sync=c ; \
-	# done
+	for thr in 1 2 4 8 12 ; do \
+		./lab2_add --threads $$thr --iterations 10000  --yield --sync=m ; \
+		./lab2_add --threads $$thr --iterations 1000  --yield --sync=s ; \
+		./lab2_add --threads $$thr --iterations 10000 --yield --sync=s ; \
+		./lab2_add --threads $$thr --iterations 10000  --yield --sync=c ; \
+		./lab2_add --threads $$thr --iterations 10000 --sync=m ; \
+		./lab2_add --threads $$thr --iterations 1000 --sync=s ; \
+		./lab2_add --threads $$thr --iterations 10000 --sync=s ; \
+		./lab2_add --threads $$thr --iterations 10000 --sync=c ; \
+	done
 
 	for its in 10 100 1000 10000 20000 ; do \
 		./lab2_list --threads 1 --iterations $$its ; \
@@ -78,7 +80,7 @@ clean:
 	rm -f *.txt
 
 dist: 
-	tar -czf lab2a-40205638.tar.gz lab2_add.c Makefile README
+	tar -czf lab2a-40205638.tar.gz lab2_add.c lab2_list.c SortedList.c SortedList.h lab2_add.csv lab2_list.csv lab2_add-1.png lab2_add-2.png lab2_add-3.png lab2_add-4.png lab2_add-5.png lab2_list-1.png lab2_list-2.png lab2_list-3.png lab2_list-4.png Makefile README
 
 # check: 
 	

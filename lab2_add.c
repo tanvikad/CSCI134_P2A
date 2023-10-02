@@ -52,7 +52,9 @@ void add_value(long long* pointer, long long value) {
     if(got_pthread_mutex){
         pthread_mutex_unlock(&mutex_lock);
     } else if(got_spin_lock) {
-        test_and_set_lock = 0;
+        // test_and_set_lock = 0;
+        __sync_lock_release(&test_and_set_lock);
+
     } else if(got_compare_swap) {
         compare_swap_lock = 0;
     }
@@ -186,8 +188,10 @@ int main(int argc, char *argv[]) {
     }
 
     char add_csv_buff[200];
-    snprintf(add_csv_buff, 200, "%s,%d,%d,%d,%f,%f,%lld\n", type_of_str, num_threads, num_iterations, num_operations, accum, accum/num_operations, counter);
+    snprintf(add_csv_buff, 200, "%s,%d,%d,%d,%ld,%ld,%lld\n", type_of_str, num_threads, num_iterations, num_operations, (long)(accum), (long)(accum/num_operations), counter);
     write(add_csv_fd, add_csv_buff, strlen(add_csv_buff));
+    write(1, add_csv_buff, strlen(add_csv_buff));
+
 
     free(threads);
 }  
